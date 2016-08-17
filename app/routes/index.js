@@ -10,8 +10,9 @@ router.get('/', function (req, res) {
 
 // Register all other routes
 router.use('/', require('./job'));
-router.use('/', require('./users')); // Change to singular
+//router.use('/', require('./users')); // Change to singular
 router.use('/', require('./job_submission'));
 router.use('/', require('./company'));
+router.use('/', require('./application'));
 
 module.exports = router;

@@ -5,7 +5,7 @@ const ObjectId = Schema.Types.ObjectId;
 
 // Schema for Companies
 const CompanySchema = new Schema({
-  // _id: ObjectId
+  _id:  { type: String, required: true },
   name: { type: String, required: true },
   job_ids: {
     type: [String],

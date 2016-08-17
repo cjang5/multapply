@@ -5,7 +5,7 @@ const ObjectId = Schema.Types.ObjectId;
 
 // Schema for Jobs
 const JobSchema = new Schema({
-  // _id: ObjectId,
+  _id: { type: String, required: true },
   title:       { type: String, required: true },
   description: { type: String, required: true },
   locations: {
@@ -26,7 +26,16 @@ const JobSchema = new Schema({
   iconPath:   { type: String, required: true },
   headerPath: { type: String, required: true },
   URL:        { type: String, required: true },
-  status:     { type: String, default: 'active' }
+  isActive:   { type: Boolean, default: true },
+  commitment: {
+    type: {
+      isFulltime: { type: Boolean, default: false },
+      season:     { type: String, default: '' },
+      year:       { type: Number, default: '' },
+      isPaid:     { type: Boolean, default: true }
+    },
+    required: true
+  }
 
 }, { timestamps: true });
 

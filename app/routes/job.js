@@ -2,6 +2,18 @@
 
 const express = require('express');
 const router  = express.Router();
+const Hashids = require('hashids');
+
+// Global counts
+const CountsModel = require('../models/counts');
+let Counts;
+CountsModel.findOne(function (err, counts) {
+  if (err) {
+    console.error("Error getting Counts Document");
+  } else {
+    Counts = counts;
+  }
+});
 
 // Job mongoose model
 const Job = require('../models/Job');
@@ -58,7 +70,10 @@ router.get('/jobs/active', function (req, res) {
  * Defaults the job's 'status' to 'active'
  */
 router.post('/jobs', function (req, res) {
+  const hashids = new Hashids(Counts.jobs_salt, 8, Counts.alphabet);
+
   let job = new Job(req.body);
+  job._id = hashids.encode(Counts.jobs + 1);
 
   job.save(function (err) {
     if (err) {
@@ -69,6 +84,7 @@ router.post('/jobs', function (req, res) {
         data: err
       });
     } else {
+      Counts.jobs += 1;
       res.json({
         status: 'success',
         status_code: 200,
