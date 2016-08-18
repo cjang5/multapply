@@ -3,17 +3,7 @@
 const express = require('express');
 const router  = express.Router();
 const Hashids = require('hashids');
-
-// Global counts
-const CountsModel = require('../models/counts');
-let Counts;
-CountsModel.findOne(function (err, counts) {
-  if (err) {
-    console.error("Error getting Counts Document");
-  } else {
-    Counts = counts;
-  }
-});
+const hashids = new Hashids(process.env.jobs_salt, 9, process.env.hashids_alphabet);
 
 // Job mongoose model
 const Job = require('../models/Job');
@@ -25,18 +15,23 @@ const Job = require('../models/Job');
 router.get('/jobs', function (req, res) {
   Job.find(function (err, jobs) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/jobs',
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved all job listings',
+        request: 'GET /api/v1/jobs',
         data: jobs
       });
+      res.status(200);
     }
   });
 });
@@ -46,20 +41,25 @@ router.get('/jobs', function (req, res) {
  * Get all Jobs that are currently active
  */
 router.get('/jobs/active', function (req, res) {
-  Job.where('status').eq('active').exec(function (err, jobs) {
+  Job.where('isActive').eq(true).exec(function (err, jobs) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/jobs/active',
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved all active job listings',
+        request: 'GET /api/v1/jobs/active',
         data: jobs
       });
+      res.status(200);
     }
   });
 });
@@ -70,26 +70,28 @@ router.get('/jobs/active', function (req, res) {
  * Defaults the job's 'status' to 'active'
  */
 router.post('/jobs', function (req, res) {
-  const hashids = new Hashids(Counts.jobs_salt, 8, Counts.alphabet);
-
   let job = new Job(req.body);
-  job._id = hashids.encode(Counts.jobs + 1);
+  job._id = hashids.encode(new Date().getTime());
 
   job.save(function (err) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'POST /api/v1/jobs',
         data: err
       });
+      res.status(400);
     } else {
-      Counts.jobs += 1;
       res.json({
-        status: 'success',
-        status_code: 200,
+        status: 'OK',
+        status_code: 201,
+        message: 'Successfully created new job listing',
+        request: 'POST /api/v1/jobs',
         data: job
       });
+      res.status(201);
     }
   });
 });
@@ -101,18 +103,23 @@ router.post('/jobs', function (req, res) {
 router.get('/jobs/:job_id', function (req, res) {
   Job.findById(req.params.job_id, function (err, job) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/jobs/' + req.params.job_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved job listing',
+        request: 'GET /api/v1/jobs/' + req.params.job_id,
         data: job
       });
+      res.status(200);
     }
   });
 });
@@ -124,18 +131,23 @@ router.get('/jobs/:job_id', function (req, res) {
 router.put('/jobs/:job_id', function (req, res) {
   Job.findOneAndUpdate(req.params.job_id, { $set: req.body }, { new: true }, function (err, job) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'PUT /api/v1/jobs/' + req.params.job_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully updated job listing',
+        request: 'PUT /api/v1/jobs/' + req.params.job_id,
         data: job
       });
+      res.status(200);
     }
   });
 });
@@ -145,20 +157,25 @@ router.put('/jobs/:job_id', function (req, res) {
  * Delete the Job with id = job_id
  */
 router.delete('/jobs/:job_id', function (req, res) {
-  Job.remove({ _id: req.params.job_id }, function (err, job) {
+  Job.findByIdAndRemove(req.params.job_id, function (err, job) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'DELETE /api/v1/jobs/' + req.params.job_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
-        status_code: 200,
+        status: 'OK',
+        status_code: 204,
+        message: 'Successfully deleted job listing',
+        request: 'DELETE /api/v1/jobs/' + req.params.job_id,
         data: job
       });
+      res.status(204);
     }
   });
 });

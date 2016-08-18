@@ -5,10 +5,10 @@ const Schema   = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
 
 const SubmissionSchema = new Schema({
-  // _id: ObjectId,
+  _id:         { type: String, required: true },
   title:       { type: String, required: true },
   description: { type: String, default: '' },
-  author_id:   { type: String, },//required: true }, REQUIRE THIS LATER ON
+  author_id:   { type: String, required: true },
   locations: {
     type: [{
       city:    String,
@@ -23,7 +23,7 @@ const SubmissionSchema = new Schema({
     }
   },
   URL:        { type: String, required: true },
-  commitment: { type: String, default: '' }
+  commitment: { type: String, default: '' } // Update this later
 });
 
 module.exports = mongoose.model('JobSubmission', SubmissionSchema);

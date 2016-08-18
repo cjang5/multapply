@@ -4,17 +4,7 @@ const express  = require('express');
 const router   = express.Router();
 const mongoose = require('mongoose');
 const Hashids  = require('hashids');
-
-// Global counts
-const CountsModel = require('../models/counts');
-let Counts;
-CountsModel.findOne(function (err, counts) {
-  if (err) {
-    console.error("Error getting Counts Document");
-  } else {
-    Counts = counts;
-  }
-});
+const hashids  = new Hashids(process.env.applications_salt, 9, process.env.hashids_alphabet);
 
 // Application Model
 const Application = require('../models/application');
@@ -26,18 +16,23 @@ const Application = require('../models/application');
 router.get('/applications', function (req, res) {
   Application.find(function (err, applications) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/applications',
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved all job applications',
+        request: 'GET /api/v1/applications',
         data: applications
       });
+      res.status(200);
     }
   });
 });
@@ -47,26 +42,28 @@ router.get('/applications', function (req, res) {
  * Create a new Job Application
  */
 router.post('/applications', function (req, res) {
-  const hashids = new Hashids(Counts.application_salt, 8, Counts.alphabet);
-
   let application = new Application(req.body);
-  application._id = hashids.encode(Counts.applications + 1);
+  application._id = hashids.encode(new Date().getTime());
 
   application.save(function (err) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'POST /api/v1/applications',
         data: err
       });
+      res.status(400);
     } else {
-      Counts.applications += 1;
       res.json({
-        status: 'success',
-        status_code: 200,
+        status: 'OK',
+        status_code: 201,
+        message: 'Successfully created new job application',
+        request: 'POST /api/v1/applications',
         data: application
       });
+      res.status(201);
     }
   });
 });
@@ -78,18 +75,23 @@ router.post('/applications', function (req, res) {
 router.get('/applications/:application_id', function (req, res) {
   Application.findById(req.params.application_id, function (err, application) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/applications/' + req.params.application_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved job application',
+        request: 'GET /api/v1/applications/' + req.params.application_id,
         data: application
       });
+      res.status(200);
     }
   });
 });
@@ -101,18 +103,23 @@ router.get('/applications/:application_id', function (req, res) {
 router.put('/applications/:application_id', function (req, res) {
   Application.findOneAndUpdate(req.params.application_id, { $set: req.body }, { new: true }, function (err, application) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'PUT /api/v1/applications/' + req.params.application_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully updated job application',
+        request: 'PUT /api/v1/applications/' + req.params.application_id,
         data: application
       });
+      res.status(200);
     }
   });
 });
@@ -122,20 +129,25 @@ router.put('/applications/:application_id', function (req, res) {
  * Delete Job Application with id 'application_id'
  */
 router.delete('/applications/:application_id', function (req, res) {
-  Application.remove({ _id: req.params.application_id }, function (err, application) {
+  Application.findByIdAndRemove(req.params.application_id, function (err, application) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'DELETE /api/v1/applications/' + req.params.application_id,
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
-        status_code: 200,
+        status: 'OK',
+        status_code: 204,
+        message: 'Successfully deleted job application',
+        request: 'DELETE /api/v1/application/' + req.params.application_id,
         data: application
       });
+      res.status(204);
     }
   });
 });
@@ -147,18 +159,23 @@ router.delete('/applications/:application_id', function (req, res) {
 router.get('/applications/:application_id/status', function (req, res) {
   Application.findById(req.params.application_id, function (err, application) {
     if (err) {
-      res.status(404);
       res.json({
-        status: 'error',
-        status_code: 404,
+        status: 'BAD REQUEST',
+        status_code: 400,
+        message: 'Request could not be completed',
+        request: 'GET /api/v1/applications/' + req.params.application_id + '/status',
         data: err
       });
+      res.status(400);
     } else {
       res.json({
-        status: 'success',
+        status: 'OK',
         status_code: 200,
+        message: 'Successfully retrieved job application status',
+        request: 'GET /api/v1/applications/' + req.params.application_id + '/status',
         data: application.status
       });
+      res.status(200);
     }
   });
 });
@@ -176,18 +193,23 @@ router.post('/applications/:application_id/status/applied', function (req, res) 
     { new: true },
     function (err, application) {
       if (err) {
-        res.status(404);
         res.json({
-          status: 'error',
-          status_code: 404,
+          status: 'BAD REQUEST',
+          status_code: 400,
+          message: 'Request could not be completed',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/applied',
           data: err
         });
+        res.status(400);
       } else {
         res.json({
-          status: 'success',
+          status: 'OK',
           status_code: 200,
+          message: 'Successfully updated job application status to \'applied\'',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/applied',
           data: application
         });
+        res.status(200);
       }
     }
   );
@@ -204,18 +226,23 @@ router.post('/applications/:application_id/status/accepted', function (req, res)
     { new: true },
     function (err, application) {
       if (err) {
-        res.status(404);
         res.json({
-          status: 'error',
-          status_code: 404,
+          status: 'BAD REQUEST',
+          status_code: 400,
+          message: 'Request could not be completed',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/accepted',
           data: err
         });
+        res.status(400);
       } else {
         res.json({
-          status: 'success',
+          status: 'OK',
           status_code: 200,
+          message: 'Successfully updated job application status to \'accepted\'',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/accepted',
           data: application
         });
+        res.status(200);
       }
     }
   );
@@ -232,18 +259,23 @@ router.post('/applications/:application_id/status/offered', function (req, res) 
     { new: true },
     function (err, application) {
       if (err) {
-        res.status(404);
         res.json({
-          status: 'error',
-          status_code: 404,
+          status: 'BAD REQUEST',
+          status_code: 400,
+          message: 'Request could not be completed',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/offered',
           data: err
         });
+        res.status(400);
       } else {
         res.json({
-          status: 'success',
+          status: 'OK',
           status_code: 200,
+          message: 'Successfully updated job application status to \'offered\'',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/offered',
           data: application
         });
+        res.status(200);
       }
     }
   );
@@ -260,18 +292,23 @@ router.post('/applications/:application_id/status/rejected', function (req, res)
     { new: true },
     function (err, application) {
       if (err) {
-        res.status(404);
         res.json({
-          status: 'error',
-          status_code: 404,
+          status: 'BAD REQUEST',
+          status_code: 400,
+          message: 'Request could not be completed',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/rejected',
           data: err
         });
+        res.status(400);
       } else {
         res.json({
-          status: 'success',
+          status: 'OK',
           status_code: 200,
+          message: 'Successfully updated job application status to \'rejected\'',
+          request: 'POST /api/v1/applications/' + req.params.application_id + '/status/rejected',
           data: application
         });
+        res.status(200);
       }
     }
   );
